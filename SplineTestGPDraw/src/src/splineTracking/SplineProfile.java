@@ -46,8 +46,8 @@ public class SplineProfile {
 	public void configureNewProfile(double distance, double radius, double angle, double pointToAvoid){
 		this.goal = pointToAvoid - radius;
 		this.totalDistance = distance;
-		this.maxAcc = 0.0005;
-		this.cruiseVelScaleFactor = 0.75;
+		this.maxAcc = 0.0002;
+		this.cruiseVelScaleFactor = 0.95;
 		this.maxSplineVel = 11231;
 		this.splineAngle = Math.abs(angle);
 		if(angle < 0) angleInverted = true;

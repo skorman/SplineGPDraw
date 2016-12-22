@@ -33,9 +33,9 @@ public class Draw {
 		leftPosition.setRightY(-200);
 		rightPosition.setRightY(-200);
 		double i = 0.1;
-		sp.configureNewProfile(50, 12, Math.toRadians(75), 30);
+		sp.configureNewProfile(50, 6, Math.toRadians(75), 30);
 		while(!sp.isFinishedTrajectory()){
-			i += (Math.random() * 0.2);
+			i += (Math.random() * 2);
 			sp.calculate(i);
 			doSomething();
 		}

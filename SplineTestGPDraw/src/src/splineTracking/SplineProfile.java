@@ -171,7 +171,7 @@ public class SplineProfile {
 		this.splineBackwards = !direction;
 		if(!direction) {
 			this.splineCruiseVel *= -1;
-			this.angleInverted = true;
+			//this.angleInverted = true;
 		}
 		this.currentSegment = new Segment(0, 0, 0);
 		this.nextSegment = new Segment(0, 0, 0);
@@ -216,9 +216,6 @@ public class SplineProfile {
 	}
 	
 	public void calculate(double time){
-		if(getState() == MotionState.DECELERATING){
-			System.out.println(getState());
-		}
 		//System.out.println(currentOuterSegment.pos);
 		//System.out.println(currentInnerSegment.pos);
 		double dt;
@@ -329,13 +326,23 @@ public class SplineProfile {
 	}
 	
 	public double getRightOutput(){
-		if(angleInverted) return currentInnerSegment.pos;
-		return currentOuterSegment.pos;
+		if(!(getState() == MotionState.SPLINE)){
+			return nextSegment.pos;
+		};
+		if (!angleInverted && !splineBackwards) return nextOuterSegment.pos;
+		if (!angleInverted && splineBackwards) return nextInnerSegment.pos;
+		if (angleInverted && !splineBackwards) return nextInnerSegment.pos;
+		return nextOuterSegment.pos;
 	}
 	
 	public double getLeftOutput(){
-		if(angleInverted) return currentOuterSegment.pos;
-		return currentInnerSegment.pos;
+		if(!(getState() == MotionState.SPLINE)){
+			return nextSegment.pos;
+		}
+		if (!angleInverted && !splineBackwards) return nextInnerSegment.pos;
+		if (!angleInverted && splineBackwards) return nextOuterSegment.pos;
+		if (angleInverted && !splineBackwards) return nextOuterSegment.pos;
+		return nextInnerSegment.pos;
 	}
 	
 	public double getAngle(){
@@ -350,8 +357,7 @@ public class SplineProfile {
 	public double getNextOuterDist(){
 		if(!(getState() == MotionState.SPLINE)){
 			return nextSegment.pos;
-		}
-		if(angleInverted) return nextInnerSegment.pos;
+		};
 		return nextOuterSegment.pos;
 	}
 	
@@ -359,7 +365,6 @@ public class SplineProfile {
 		if(!(getState() == MotionState.SPLINE)){
 			return nextSegment.pos;
 		}
-		if(angleInverted) return nextOuterSegment.pos;
 		return nextInnerSegment.pos;
 	}
 	
@@ -376,7 +381,9 @@ public class SplineProfile {
 		
 		double innerRadius = splineRadius - width;
 		double angle = nextOuterSegment.pos / splineRadius;
-		if(angleInverted) sumAngle -= Math.toDegrees(angle);
+		//if(angleInverted) sumAngle -= Math.toDegrees(angle);
+		if(this.splineBackwards && !this.angleInverted) sumAngle -= Math.toDegrees(angle);
+		else if (this.angleInverted && !this.splineBackwards) sumAngle -= Math.toDegrees(angle);
 		else sumAngle += Math.toDegrees(angle);
 
 		nextInnerSegment.pos = angle * innerRadius;
@@ -410,6 +417,7 @@ public class SplineProfile {
 		double t_to_goal = Math.abs(x_to_goal / splineCruiseVel);
 	
 		//System.out.println(outerCircDistance);
+		//System.out.println(sumAngle);
 		
 		if(t_to_goal < dt){
 			if(!this.isFullProfile) this.totalDistance = outerCircDistance;
@@ -423,10 +431,13 @@ public class SplineProfile {
 			currentSegment.pos = currentOuterSegment.pos;
 			currentSegment.acc = currentOuterSegment.acc;
 			this.splineCruiseVel = 0;
+			//System.out.println(sumAngle);
+			//System.out.println(angleInverted);
+			//System.out.println(splineBackwards);
 		}
 	}
 	public boolean isFinishedTrajectory() {
-        return Math.abs(currentOuterSegment.pos - totalDistance) < 1
-                && Math.abs(currentSegment.vel) < 1;
+        return Math.abs(currentOuterSegment.pos - totalDistance) < 0.1;
+                //&& Math.abs(currentSegment.vel) < 0.5;
     }
 }

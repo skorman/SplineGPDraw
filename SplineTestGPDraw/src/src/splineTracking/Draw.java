@@ -30,10 +30,10 @@ public class Draw {
 	
 	public void draw(){
 		leftPosition.setRightX(30);
-		leftPosition.setRightY(0);
-		rightPosition.setRightY(0);
+		leftPosition.setRightY(-200);
+		rightPosition.setRightY(-200);
 		double i = 0.1;
-		sp.configureNewMotionProfile(-20, 0, 0, -0.05, 0);
+		sp.configureNewMotionProfile(20, 0, 0, 0, 0);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
 			sp.calculate(i);
@@ -45,20 +45,20 @@ public class Draw {
 			pen.drawCircle(0.01);*/
 			doSomething();
 		}
-		sp.configureSplineProfile(6, Math.toRadians(-75), 0, 0, 0.05, false);
+		sp.configureSplineProfile(10, Math.toRadians(-180), 0, 0, 0.05, false);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
 			sp.calculate(i);
 			doSomething();
 			//System.out.println("not good");
 		}
-		sp.configureNewMotionProfile(-20, 0, 0, -0.06, -0.05);
+		sp.configureNewMotionProfile(-20, 0, 0, 0, -0.05);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
 			sp.calculate(i);
 			doSomething();
 			//System.out.println("good");
-		}
+		}/*
 		sp.configureSplineProfile(20, Math.toRadians(-90), 0, 0, 0.06, false);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
@@ -78,10 +78,10 @@ public class Draw {
 	}
 	private void doSomething(){
 		
-		rightDistance += sp.getNextOuterDist() * 10;
+		rightDistance += sp.getRightOutput() * 10;
 		rightPosition.setPosistions(sp.getAngle(), rightDistance);
 		
-		leftDistance += sp.getNextInnerDist() * 10;
+		leftDistance += sp.getLeftOutput() * 10;
 		leftPosition.setPosistions(sp.getAngle(), leftDistance);
 
 		pen.up();

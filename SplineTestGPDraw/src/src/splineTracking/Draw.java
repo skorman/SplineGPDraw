@@ -30,27 +30,49 @@ public class Draw {
 	
 	public void draw(){
 		leftPosition.setRightX(30);
-		leftPosition.setRightY(-200);
-		rightPosition.setRightY(-200);
+		leftPosition.setRightY(0);
+		rightPosition.setRightY(0);
 		double i = 0.1;
-		sp.configureNewProfile(50, 6, Math.toRadians(-75), 30, 20);
+		sp.configureNewMotionProfile(-20, 0, 0, -0.05, 0);
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			/*
+			pen.up();
+			pen.move(i - 250, (sp.getVel() * 1000) - 150);
+			//System.out.println(sp.getRightOutput());
+			pen.down();
+			pen.drawCircle(0.01);*/
+			doSomething();
+		}
+		sp.configureSplineProfile(6, Math.toRadians(-75), 0, 0, 0.05, false);
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			doSomething();
+			//System.out.println("not good");
+		}
+		sp.configureNewMotionProfile(-20, 0, 0, -0.06, -0.05);
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			doSomething();
+			//System.out.println("good");
+		}
+		sp.configureSplineProfile(20, Math.toRadians(-90), 0, 0, 0.06, false);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
 			sp.calculate(i);
 			doSomething();
 		}
-		sp.configureSplineProfile(6, Math.toRadians(145), 0, 0, 0.03);
+		/*
+		sp.configureNewFullProfile(-30, 6, Math.toRadians(45), 10, 0, 0);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
 			sp.calculate(i);
 			doSomething();
 		}
-		sp.configureNewProfile(50, 6, Math.toRadians(29), 30, 0);
-		while(!sp.isFinishedTrajectory()){
-			i += (Math.random() * 2);
-			sp.calculate(i);
-			doSomething();
-		}
+		*/
 		//System.out.println(sp.getRightOutput());
 		
 	}

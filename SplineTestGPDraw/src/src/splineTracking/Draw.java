@@ -33,12 +33,25 @@ public class Draw {
 		leftPosition.setRightY(-200);
 		rightPosition.setRightY(-200);
 		double i = 0.1;
-		sp.configureNewProfile(50, 6, Math.toRadians(75), 30);
+		sp.configureNewProfile(50, 6, Math.toRadians(-75), 30, 20);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
 			sp.calculate(i);
 			doSomething();
 		}
+		sp.configureSplineProfile(6, Math.toRadians(145), 0, 0, 0.03);
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			doSomething();
+		}
+		sp.configureNewProfile(50, 6, Math.toRadians(29), 30, 0);
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			doSomething();
+		}
+		//System.out.println(sp.getRightOutput());
 		
 	}
 	private void doSomething(){

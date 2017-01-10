@@ -43,9 +43,9 @@ public class SplineProfile {
 	}
 	
 	
-	public void configureNewProfile(double distance, double radius, double angle, double pointToAvoid){
-		this.goal = pointToAvoid - radius;
-		this.totalDistance = distance;
+	public void configureNewProfile(double distance, double radius, double angle, double pointToAvoid, double currentPos){
+		this.goal = pointToAvoid - radius + currentPos;
+		this.totalDistance = distance + currentPos;
 		this.maxAcc = 0.0002;
 		this.cruiseVelScaleFactor = 0.95;
 		this.maxSplineVel = 11231;
@@ -57,19 +57,62 @@ public class SplineProfile {
 		if(distance < 0){
 			this.maxAcc *= -1;
 		}
-		this.cruiseVel = getCruiseVel(this.goal);
+		this.cruiseVel = getCruiseVel(this.goal - currentPos);
 		if(distance < 0){
 			this.cruiseVel *= -1;
 		}
-		this.splineCruiseVel = getSplineCruiseVel(this.goal);
-		this.currentSegment = new Segment(0, 0, 0);
+		this.splineCruiseVel = getSplineCruiseVel(this.goal - currentPos);
+		this.currentSegment = new Segment(currentPos, 0, 0);
 		this.nextSegment = new Segment(0, 0, 0);
-		this.currentOuterSegment = new Segment(0, 0, 0);
-		this.currentInnerSegment = new Segment(0, 0, 0);
+		this.currentOuterSegment = new Segment(currentPos, 0, 0);
+		this.currentInnerSegment = new Segment(currentPos, 0, 0);
 		this.nextOuterSegment = new Segment(0, 0, 0);
 		this.nextInnerSegment = new Segment(0, 0, 0);
 		setState(MotionState.ACCELERATING);
 		//lastTime = Timer.getFPGATimestamp();
+	}
+	
+	public void configureSplineProfile(double radius, double angle, double currentVel, double currentPos) {
+		this.goal = angle * radius + currentPos;
+		this.maxAcc = 0.0002;
+		this.cruiseVelScaleFactor = 0.7;
+		this.maxSplineVel = 11231;
+		this.splineAngle = Math.abs(angle);
+		if(angle < 0) angleInverted = true;
+		this.splineRadius = radius;
+		this.totalDistance = this.splineRadius * this.splineAngle + currentPos;
+		this.cruiseVel = getCruiseVel(this.totalDistance - currentPos);
+		this.splineCruiseVel = getSplineCruiseVel(this.totalDistance - currentPos);
+		this.currentSegment = new Segment(currentPos, currentVel, 0);
+		this.nextSegment = new Segment(0, 0, 0);
+		this.currentOuterSegment = new Segment(currentPos, currentVel, 0);
+		this.currentInnerSegment = new Segment(currentPos, currentVel, 0);
+		this.nextOuterSegment = new Segment(0, 0, 0);
+		this.nextInnerSegment = new Segment(0, 0, 0);
+		setState(MotionState.SPLINE);
+	}
+	
+	public void configureSplineProfile(double radius, double angle, double currentVel, double currentPos, double startVel){
+		//if(angleInverted) this.sumAngle = -this.sumAngle;
+		this.angleInverted = false;
+		this.maxAcc = 0.0002;
+		this.cruiseVelScaleFactor = 0.7;
+		this.maxSplineVel = 11231;
+		this.splineAngle = Math.abs(angle);
+		if(angle < 0) angleInverted = true;
+		this.splineRadius = radius;
+		this.goal = this.splineAngle * this.splineRadius + currentPos;
+		this.totalDistance = this.splineRadius * this.splineAngle + currentPos;
+		System.out.println(totalDistance + "t");
+		this.cruiseVel = startVel;
+		this.splineCruiseVel = getSplineCruiseVel(this.totalDistance - currentPos);
+		this.currentSegment = new Segment(currentPos, startVel, 0);
+		this.nextSegment = new Segment(0, 0, 0);
+		this.currentOuterSegment = new Segment(currentPos, startVel, 0);
+		this.currentInnerSegment = new Segment(currentPos, startVel, 0);
+		this.nextOuterSegment = new Segment(0, 0, 0);
+		this.nextInnerSegment = new Segment(0, 0, 0);
+		setState(MotionState.SPLINE);
 	}
 	
 	private enum MotionState{
@@ -227,7 +270,7 @@ public class SplineProfile {
 	}
 	
 	public double getAngle(){
-		if(angleInverted) return -sumAngle;
+		//if(angleInverted) return -sumAngle;
 		return sumAngle;
 	}
 	
@@ -252,12 +295,11 @@ public class SplineProfile {
 	}
 	
 	private void splineCalculate(double delta_t){
-		//System.out.println("Spline");
 		double dt = delta_t;
-		
+				
 		double currentInnerVel = currentInnerSegment.vel;
 		double outerCircDistance = splineAngle * splineRadius;
-		
+				
 		nextOuterSegment.pos = splineCruiseVel * dt;
 		nextOuterSegment.vel = splineCruiseVel;
 		nextOuterSegment.acc = 0;
@@ -265,8 +307,9 @@ public class SplineProfile {
 		
 		double innerRadius = splineRadius - width;
 		double angle = nextOuterSegment.pos / splineRadius;
-		sumAngle += Math.toDegrees(angle);
-		//System.out.println(sumAngle);
+		if(angleInverted) sumAngle -= Math.toDegrees(angle);
+		else sumAngle += Math.toDegrees(angle);
+		System.out.println(sumAngle);
 
 		nextInnerSegment.pos = angle * innerRadius;
 		double displacement = nextInnerSegment.pos;

@@ -29,10 +29,70 @@ public class Draw {
 	}
 	
 	public void draw(){
-		leftPosition.setRightX(30);
-		leftPosition.setRightY(-200);
-		rightPosition.setRightY(-200);
-		double i = 0.1;
+		rightPosition.setRightX(30);
+		leftPosition.setRightY(0);
+		rightPosition.setRightY(0);
+		double i = 0;
+		
+		System.out.println(rightPosition.getRightXPos());
+		
+		sp.configureSplineProfile(5, Math.toRadians(45), 0.05, true);
+		sp.initializeProfile(0, 0);
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			doSomething();
+		}
+		//System.out.println(sp.getAngle());
+		i = 0;
+		
+		sp.configureSplineProfile(5, Math.toRadians(-45), 0.05, true);
+		sp.initializeProfile(0, 0);
+		//System.out.println(sp.getAngle());
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			//System.out.println(sp.getAngle());
+			//System.out.println(sp.isFinishedTrajectory());
+			doSomething();
+		}
+		
+		System.out.println(rightPosition.getRightXPos() - 30);
+		System.out.println(leftPosition.getRightXPos());
+		
+		pen.up();
+		pen.move(0, 0);
+		pen.setDirection(0);
+		double angle = Math.cos(Math.toRadians(45));
+		double secondAngle = Math.sin(Math.toRadians(45));
+		double a = 50 - (angle * 50);
+		double b = ((secondAngle * 50)) + ((secondAngle * 20));
+		double c = 20 - (angle * 20);
+		pen.down();
+		pen.forward(a);
+		pen.setDirection(90);
+		pen.forward(b);
+		pen.setDirection(0);
+		pen.forward(c);
+		
+		System.out.println(a + c);
+		
+		/*
+		sp.configureSplineProfile(1.5, Math.toRadians(-85), 0, 0, 0.1, true);
+		while(!sp.isFinishedTrajectory()){
+			sp.setTolerance(0.01);
+			i += (Math.random() * 0.05);
+			sp.calculate(i);
+			doSomething();
+		}
+/*
+		sp.configureNewMotionProfile(20, 0, 0, 0, 0);
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			doSomething();
+		}
+		/*
 		sp.configureNewMotionProfile(20, 0, 0, 0, 0);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
@@ -42,7 +102,7 @@ public class Draw {
 			pen.move(i - 250, (sp.getVel() * 1000) - 150);
 			//System.out.println(sp.getRightOutput());
 			pen.down();
-			pen.drawCircle(0.01);*/
+			pen.drawCircle(0.01);
 			doSomething();
 		}
 		sp.configureSplineProfile(10, Math.toRadians(-180), 0, 0, 0.05, false);
@@ -88,14 +148,16 @@ public class Draw {
 		pen.move(rightPosition.getRightXPos(), rightPosition.getRightYPos());
 		pen.setDirection(-(sp.getAngle() + 270));
 		pen.down();
-		pen.forward(sp.getNextOuterDist() * 10);
+		pen.forward(sp.getRightOutput() * 10);
+		
+		//System.out.println(-(pen.getDirection() + 270));
 	
 		
 		pen.up();
 		pen.move(leftPosition.getRightXPos(), leftPosition.getRightYPos());
 		pen.setDirection(-(sp.getAngle() + 270));
 		pen.down();
-		pen.forward(sp.getNextOuterDist() * 10);
+		pen.forward(sp.getLeftOutput() * 10);
 		
 	}
 	

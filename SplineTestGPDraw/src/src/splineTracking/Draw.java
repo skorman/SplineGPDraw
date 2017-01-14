@@ -30,13 +30,13 @@ public class Draw {
 	
 	public void draw(){
 		rightPosition.setRightX(30);
-		leftPosition.setRightY(0);
-		rightPosition.setRightY(0);
+		leftPosition.setRightY(200);
+		rightPosition.setRightY(200);
 		double i = 0;
 		
 		System.out.println(rightPosition.getRightXPos());
 		
-		sp.configureSplineProfile(5, Math.toRadians(45), 0.05, true);
+		sp.configureSplineProfile(10, Math.toRadians(143), false);
 		sp.initializeProfile(0, 0);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
@@ -44,8 +44,8 @@ public class Draw {
 			doSomething();
 		}
 		//System.out.println(sp.getAngle());
-		i = 0;
-		
+		//i = 0;
+		/*
 		sp.configureSplineProfile(5, Math.toRadians(-45), 0.05, true);
 		sp.initializeProfile(0, 0);
 		//System.out.println(sp.getAngle());
@@ -56,9 +56,11 @@ public class Draw {
 			//System.out.println(sp.isFinishedTrajectory());
 			doSomething();
 		}
-		
+		/*
+		/*
 		System.out.println(rightPosition.getRightXPos() - 30);
 		System.out.println(leftPosition.getRightXPos());
+		
 		
 		pen.up();
 		pen.move(0, 0);
@@ -76,7 +78,7 @@ public class Draw {
 		pen.forward(c);
 		
 		System.out.println(a + c);
-		
+		*/
 		/*
 		sp.configureSplineProfile(1.5, Math.toRadians(-85), 0, 0, 0.1, true);
 		while(!sp.isFinishedTrajectory()){

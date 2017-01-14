@@ -5,7 +5,7 @@ public class SplineProfile {
 	private double Kp, Ki, Kd, Ka, Kv, cruiseVel, 
 	splineCruiseVel, maxAcc, cruiseVelScaleFactor, splineRadius,
 	splineAngle, totalOuterDistance, lastInnerPos = 0, sumAngle = 0,
-	leftStartPos, rightStartPos, lastRightError = 0,
+	leftStartPos, rightStartPos, lastRightError = 0, startVel,
 	lastLeftError = 0, splineDecelerateVel;
 	private double lastTime;
 	public Segment currentOuterSegment = new Segment(0, 0, 0);
@@ -40,6 +40,20 @@ public class SplineProfile {
 		}
 	}
 	
+	private enum MotionState{
+		ACCELERATING, CRUISING, DECELERATING, END
+	}
+	
+	private MotionState state = MotionState.END;
+	
+	private void setState(MotionState newState){
+		state = newState;
+	}
+	
+	private MotionState getState(){
+		return state;
+	}
+	
 	public void configureSplineProfile(double radius, double angle, boolean direction) {
 		this.isFinished = false;
 		this.maxAcc = 0.0002;
@@ -55,11 +69,16 @@ public class SplineProfile {
 		if(!direction) {
 			this.splineCruiseVel *= -1;
 		}
-		if(this.splineBackwards) this.totalOuterDistance *= -1;
+		if(this.splineBackwards) {
+			this.totalOuterDistance *= -1;
+			this.maxAcc *= -1;
+		}
 		if (this.angleInverted == this.splineBackwards){
 			rightOuter = false;
 		}
 		else rightOuter = true;
+		this.startVel = 0;
+		setState(MotionState.ACCELERATING);
 	}
 	
 	public void configureSplineProfile(double radius, double angle, double startVel, boolean direction){
@@ -71,17 +90,22 @@ public class SplineProfile {
 		this.splineAngle = Math.abs(angle);
 		this.splineRadius = Math.abs(radius);
 		this.totalOuterDistance = this.splineRadius * this.splineAngle;
-		this.cruiseVel = startVel;
+		this.startVel = startVel;
+		this.cruiseVel = getCruiseVel(this.totalOuterDistance);
 		this.splineCruiseVel = getSplineCruiseVel(this.totalOuterDistance);
 		this.splineBackwards = !direction;
 		if(!direction) {
 			this.splineCruiseVel *= -1;
 		}
-		if(this.splineBackwards) this.totalOuterDistance *= -1;
+		if(this.splineBackwards) {
+			this.totalOuterDistance *= -1;
+			this.maxAcc *= -1;
+		}
 		if (this.angleInverted == this.splineBackwards){
 			rightOuter = false;
 		}
 		else rightOuter = true;
+		setState(MotionState.ACCELERATING);
 	}
 	
 	private double getCruiseVel(double distance){
@@ -112,8 +136,8 @@ public class SplineProfile {
 	public void initializeProfile(double leftCurrentPos, double rightCurrentPos){
 		this.leftStartPos = leftCurrentPos;
 		this.rightStartPos = rightCurrentPos;
-		currentOuterSegment = new Segment(0, 0, 0);
-		currentInnerSegment = new Segment(0, 0, 0);
+		currentOuterSegment = new Segment(0, this.startVel, 0);
+		currentInnerSegment = new Segment(0, this.startVel, 0);
 		nextOuterSegment = new Segment(0, 0, 0);
 		nextInnerSegment = new Segment(0, 0, 0);
 		lastTime = 0;
@@ -126,22 +150,70 @@ public class SplineProfile {
 		lastTime = currentTime;
 		
 		double currentInnerVel = currentInnerSegment.vel;
+		double currentOuterVel = currentOuterSegment.vel;
+		double outerDistanceToGo = this.totalOuterDistance - currentOuterSegment.pos;
+		
+		double t_to_cruise = Math.abs((this.splineCruiseVel - currentOuterVel) / maxAcc); //time to accelerate to cruise speed
+		double x_to_cruise = currentOuterVel * t_to_cruise + .5 * maxAcc * t_to_cruise * t_to_cruise; //distance to get to cruise speed
+		
+		double t_to_zero = Math.abs((currentOuterVel - this.splineDecelerateVel) / maxAcc); //time to get to zero speed from cruise speed
+		double x_to_zero = currentOuterVel * t_to_zero - .5 * maxAcc * t_to_zero * t_to_zero; //distance to get to zero speed
 				
-		nextOuterSegment.pos = splineCruiseVel * dt;
-		nextOuterSegment.vel = splineCruiseVel;
-		nextOuterSegment.acc = 0;
+		double cruiseX;
+		if(this.totalOuterDistance > 0){
+			cruiseX  = Math.max(0, outerDistanceToGo - x_to_cruise - x_to_zero);
+		}
+		else{
+			cruiseX  = Math.min(0, outerDistanceToGo - x_to_cruise - x_to_zero);
+		}
+		double cruiseT = Math.abs(cruiseX / this.splineCruiseVel);
+		
+		if (getState() == MotionState.ACCELERATING){
+			if (t_to_cruise < dt){
+				setState(MotionState.CRUISING);
+			}
+		}
+		
+		if(getState() == MotionState.CRUISING){
+			if(cruiseT < dt){
+				setState(MotionState.DECELERATING);
+			}
+		}
+		
+		if(getState() == MotionState.DECELERATING){
+			if(t_to_zero < dt){
+				setState(MotionState.END);
+			}
+		}
+		
+		if(getState() == MotionState.ACCELERATING){
+			nextOuterSegment.pos = currentOuterVel * dt + 0.5 * maxAcc * dt * dt;
+			nextOuterSegment.vel = currentOuterVel + dt * maxAcc;
+			nextOuterSegment.acc = maxAcc;
+		}
+		else if(getState() == MotionState.CRUISING){
+			nextOuterSegment.pos = splineCruiseVel * dt;
+			nextOuterSegment.vel = splineCruiseVel;
+			nextOuterSegment.acc = 0;
+		}
+		else if(getState() == MotionState.DECELERATING){
+			nextOuterSegment.pos = currentOuterVel * dt - 0.5 * maxAcc * dt * dt;
+			nextOuterSegment.vel = currentOuterVel - maxAcc * dt;
+			nextOuterSegment.acc = -maxAcc;
+		}
+		else{
+			nextOuterSegment.pos = 0;
+			currentOuterSegment.pos = this.totalOuterDistance;
+			nextOuterSegment.vel = 0;
+			nextOuterSegment.acc = 0;
+		}
 		
 		double innerRadius = splineRadius - width;
 		double angle = nextOuterSegment.pos / splineRadius;
 		//if(this.angleInverted) angle *= -1;
 		if(this.angleInverted != this.splineBackwards) sumAngle -= Math.toDegrees(angle);
 		else sumAngle += Math.toDegrees(angle);
-		/*
-		if((this.splineBackwards && !this.angleInverted) || 
-				(this.angleInverted && !this.splineBackwards)) sumAngle -= Math.toDegrees(angle);*/
-		//System.out.println(this.angleInverted + " angle " + this.splineBackwards + " back " + this.splineCruiseVel + " vel "
-			//	+ dt + " dt " + Math.toDegrees(angle) + " real angle " + this.rightOuter + " outer " + nextOuterSegment.pos + " pos ");
-
+		
 		nextInnerSegment.pos = angle * innerRadius;
 		double displacement = nextInnerSegment.pos;
 		nextInnerSegment.vel = displacement / dt;
@@ -185,10 +257,16 @@ public class SplineProfile {
 		}
 		*/
 		
+		System.out.println(t_to_cruise);
+		System.out.println(cruiseT);
+		System.out.println(getState());
+		
 		double x_to_goal = this.totalOuterDistance - currentOuterSegment.pos;
 		double t_to_goal = Math.abs(x_to_goal / splineCruiseVel);
 	
 		if(t_to_goal < dt){
+			System.out.println(getState());
+			System.out.println(currentOuterSegment.vel);
 			isFinished = true;
 		}
 	}

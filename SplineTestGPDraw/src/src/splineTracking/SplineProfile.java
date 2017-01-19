@@ -81,7 +81,7 @@ public class SplineProfile {
 		setState(MotionState.ACCELERATING);
 	}
 	
-	public void configureSplineProfile(double radius, double angle, double startVel, boolean direction){
+	public void configureSplineProfile(double radius, double angle, double startVel, double decelerateVel, boolean direction){
 		this.isFinished = false;
 		this.angleInverted = angle < 0;
 		this.maxAcc = 0.0002;
@@ -105,6 +105,7 @@ public class SplineProfile {
 			rightOuter = false;
 		}
 		else rightOuter = true;
+		this.splineDecelerateVel = decelerateVel;
 		setState(MotionState.ACCELERATING);
 	}
 	
@@ -141,6 +142,10 @@ public class SplineProfile {
 		nextOuterSegment = new Segment(0, 0, 0);
 		nextInnerSegment = new Segment(0, 0, 0);
 		lastTime = 0;
+	}
+	
+	public double getCruiseVel(){
+		return this.cruiseVel;
 	}
 	
 	public void calculate(double time){
@@ -257,16 +262,16 @@ public class SplineProfile {
 		}
 		*/
 		
-		System.out.println(t_to_cruise);
-		System.out.println(cruiseT);
+		//System.out.println(t_to_cruise);
+		//System.out.println(cruiseT);
 		System.out.println(getState());
 		
 		double x_to_goal = this.totalOuterDistance - currentOuterSegment.pos;
 		double t_to_goal = Math.abs(x_to_goal / splineCruiseVel);
 	
 		if(t_to_goal < dt){
-			System.out.println(getState());
-			System.out.println(currentOuterSegment.vel);
+			//System.out.println(getState());
+			//System.out.println(currentOuterSegment.vel);
 			isFinished = true;
 		}
 	}

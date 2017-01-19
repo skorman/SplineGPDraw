@@ -30,19 +30,31 @@ public class Draw {
 	
 	public void draw(){
 		rightPosition.setRightX(30);
-		leftPosition.setRightY(200);
-		rightPosition.setRightY(200);
+		leftPosition.setRightY(-200);
+		rightPosition.setRightY(-200);
 		double i = 0;
 		
-		System.out.println(rightPosition.getRightXPos());
+		//System.out.println(rightPosition.getRightXPos());
 		
-		sp.configureSplineProfile(10, Math.toRadians(143), false);
+		sp.configureSplineProfile(6, Math.toRadians(90), 0, 0.02, true);
 		sp.initializeProfile(0, 0);
 		while(!sp.isFinishedTrajectory()){
 			i += (Math.random() * 2);
 			sp.calculate(i);
 			doSomething();
 		}
+		
+		i = 0;
+		
+		sp.configureSplineProfile(6, Math.toRadians(-90), 0.02, 0, true);
+		sp.initializeProfile(0, 0);
+		//System.out.println(sp.getCruiseVel());
+		while(!sp.isFinishedTrajectory()){
+			i += (Math.random() * 2);
+			sp.calculate(i);
+			doSomething();
+		}
+		//System.out.println(-(pen.getDirection() + 270));
 		//System.out.println(sp.getAngle());
 		//i = 0;
 		/*
